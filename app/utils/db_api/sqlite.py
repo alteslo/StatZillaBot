@@ -1,4 +1,3 @@
-from logging import Logger
 import sqlite3
 import datetime
 
@@ -25,9 +24,9 @@ class Database():
         if commit:
             connection.commit()
         if fetchone:
-            data = connection.fetchone()
+            data = cursor.fetchone()
         if fetchall:
-            data = connection.fetchall()
+            data = cursor.fetchall()
 
         connection.close()
         return data
@@ -49,5 +48,32 @@ class Database():
         self.execute(sql, parameters=parameters, commit=True)
 
     def select_all_users(self):
+        """Возвращает всех пользователей"""
         sql = """SELECT * FROM users"""
         return self.execute(sql, fetchall=True)
+
+    @staticmethod
+    def format_args(sql, parameters: dict):
+        """Метод используемый как функция с помощью @staticmethod"""
+        # SQL_EXAMPLE = "SELECT * FROM Users where id=1 AND Name=?"
+        sql += " AND ".join([f'{item} = ?' for item in parameters])
+        return sql, tuple(parameters.values())
+
+    def select_user(self, **kwargs):
+        """Возвращает пользователя"""
+        sql = """SELECT * FROM users WHERE """
+        sql, parameters = self.format_args(sql, kwargs)
+        return self.execute(sql, parameters=parameters, fetchone=True)
+
+    def count_users(self):
+        """Возвращает количесво пользователей"""
+        sql = """SELECT COUNT(*) FROM users"""
+        return self.execute(sql, fetchone=True)
+
+    def update_user_email(self, email, user_id):
+        sql = """UPDATE users SET email=? WHERE id=?"""
+        return self.execute(sql, parameters=(email, user_id), commit=True)
+
+    def delete_users(self):
+        sql = """DELETE FROM users"""
+        self.execute(sql, commit=True)
