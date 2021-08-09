@@ -14,7 +14,7 @@ def test():
     db.add_user(5, "John", "john@mail.com")
 
     users = db.select_all_users()
-    print(f'Получил все пользователей: {users}')
+    print(f'Получил всех пользователей: {users}')
 
     user = db.select_user(name="John", user_id=5)
     print(f'Получил пользователя: {user}')

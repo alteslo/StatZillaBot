@@ -1,15 +1,26 @@
+import sqlite3
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 
 from app.states.interview import Interview
 from app import keyboards
 from app import app_data
+from app.utils.db_api.sqlite import db
 
 
 async def interview_start(message: types.Message, state: FSMContext):
     """Обработчик первого шага, реагирующий на команду start"""
     await state.finish()
+    user_id = message.from_user.id
     user_name = message.from_user.first_name
+    user_fname = message.from_user.full_name
+
+    try:
+        db.add_user(user_id, user_fname)
+    except sqlite3.IntegrityError as err:
+        print("___________________________________________")
+        print(err)
+
     await message.answer(
         f"Приветствую, {user_name}!",
         reply_markup=types.ReplyKeyboardRemove()

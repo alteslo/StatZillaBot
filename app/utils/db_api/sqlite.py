@@ -4,7 +4,7 @@ import datetime
 
 class Database():
     """Модель базы данных"""
-    def __init__(self, path_to_db="main.db"):
+    def __init__(self, path_to_db=r"app\data\main.db"):
         self.path_to_db = path_to_db
 
     @property
@@ -77,3 +77,6 @@ class Database():
     def delete_users(self):
         sql = """DELETE FROM users"""
         self.execute(sql, commit=True)
+
+
+db = Database()
