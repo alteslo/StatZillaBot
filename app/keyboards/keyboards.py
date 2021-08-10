@@ -4,6 +4,7 @@ from app.app_data import stat_datas
 from app.keyboards.callback_datas import service_callback
 from app.keyboards.callback_datas import stat_callback
 from app.keyboards.callback_datas import back_callback
+from app.keyboards.callback_datas import need_help_callback
 
 
 def kb_service_selection(width=1):
@@ -24,7 +25,7 @@ def kb_service_selection(width=1):
     return keyboard
 
 
-def kb_stat_processing_choice(width=1):
+def kb_stat_processing_choice(user_id, width=1):
     """Клавиатура для выбора услуг статистического анализа"""
     buttons = []
     for key in stat_datas:
@@ -33,6 +34,11 @@ def kb_stat_processing_choice(width=1):
                                        callback_data=stat_callback.new(
                                                     service=key)))
 
+    buttons.append(
+        types.InlineKeyboardButton(text="Не нашли подходящий инструмент?",
+                                   callback_data=need_help_callback.new(
+                                       user_id=user_id))
+    )
     keyboard = types.InlineKeyboardMarkup(row_width=width)
     keyboard.add(*buttons)
     return keyboard
@@ -42,7 +48,7 @@ def kb_price_answer(width=1):
     """Клавиатура для выбора услуг статистического анализа"""
     buttons = [
             types.InlineKeyboardButton(text="Хотите скидку?",
-                                       callback_data="want_discount"),
+                                       callback_data="need_support"),
             types.InlineKeyboardButton(text="Вернуться к выбору услуг",
                                        callback_data=back_callback.new(
                                            deep="stat_choice")),

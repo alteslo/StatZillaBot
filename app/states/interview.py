@@ -7,3 +7,4 @@ class Interview(StatesGroup):
     waiting_for_stat_processing_choice = State()
     price_answer = State()
     waiting_for_contact_number = State()
+    need_help = State()
