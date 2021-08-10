@@ -1,6 +1,5 @@
 from aiogram.utils.callback_data import CallbackData
 
-service_callback = CallbackData("service", "bot_settings")
-share_callback = CallbackData("share", "id")
-buy_callback = CallbackData("buy", "id")
-like_callback = CallbackData("action", "action", "id")
+service_callback = CallbackData("service", "main_services")
+stat_callback = CallbackData("stat", "service")
+back_callback = CallbackData("back", "deep")
