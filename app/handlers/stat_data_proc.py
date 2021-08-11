@@ -39,6 +39,9 @@ async def stat_price_answer(call: types.CallbackQuery,
     if "help" in callback_data.values():
         await call.message.edit_text(text="Вы выбрали помощь зала",
                                      parse_mode='HTML')
+        user_id = call.user
+        await call.message.answer_contact(phone_number="", first_name="")
+        
         await Interview.need_help.set()
         await call.answer()
     else:
