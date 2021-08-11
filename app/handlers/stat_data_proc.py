@@ -6,18 +6,19 @@ from app import keyboards
 from app import app_data
 from app.keyboards.callback_datas import service_callback
 from app.keyboards.callback_datas import stat_callback
-from app.keyboards.callback_datas import need_help_callback
+from app.keyboards.callback_datas import help_callback
 
 
 async def stat_processing_choice(call: types.CallbackQuery,
                                  callback_data: dict,
                                  state: FSMContext):
     """Функция вызываемая только из состояния waiting_for_service_selection"""
-    print(callback_data)
     service_choise = callback_data.get("main_services")
-    await state.update_data(chosen_main_service=service_choise)
     user_id = call.from_user.id
     keyboard = keyboards.kb_stat_processing_choice(user_id)
+
+    await state.update_data(chosen_main_service=service_choise)
+
     if service_choise == "stat_proc":
         await call.message.edit_text("Теперь выберите вид анализа:",
                                      reply_markup=keyboard)
@@ -42,12 +43,12 @@ async def stat_price_answer(call: types.CallbackQuery,
         await call.answer()
     else:
         choice = callback_data.get(("service"))
-        await state.update_data(chosen_stat_processing=choice)
-
-        keyboard = keyboards.kb_price_answer()
+        user_id = call.from_user.id
+        keyboard = keyboards.kb_discount(user_id)
         option = app_data.stat_datas[choice][0]
         bill = app_data.stat_datas[choice][1]
 
+        await state.update_data(chosen_stat_processing=choice)
         await call.message.edit_text(
                                 f"Вы выбрали: {option} стоимость составит:\n"
                                 f"<u><b>{bill}</b></u> р.",
@@ -65,13 +66,11 @@ def register_handlers_Analysis(dp: Dispatcher):
         )
     dp.register_callback_query_handler(
             stat_price_answer,
-            need_help_callback.filter(),
+            help_callback.filter(),
             state=Interview.waiting_for_stat_processing_choice
         )
-    # Регистрируем обработчик на цены
-    for data in app_data.stat_datas:
-        dp.register_callback_query_handler(
-            stat_price_answer,
-            stat_callback.filter(service=data),
-            state=Interview.waiting_for_stat_processing_choice
+    dp.register_callback_query_handler(
+        stat_price_answer,
+        stat_callback.filter(),
+        state=Interview.waiting_for_stat_processing_choice
         )

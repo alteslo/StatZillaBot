@@ -1,4 +1,3 @@
-
 from aiogram import Dispatcher, types
 from aiogram.dispatcher.storage import FSMContext
 
@@ -13,13 +12,14 @@ async def return_to_stat_processing_choice(call: types.CallbackQuery,
     await state.update_data(chosen_stat_processing="")
 
     choice = callback_data.get(("deep"))
+    user_id = call.from_user.id
     if choice == "stat_choice":
-        keyboard = keyboards.kb_stat_processing_choice()
+        keyboard = keyboards.kb_stat_processing_choice(user_id)
         await call.message.edit_text("Выберите вид анализа:",
                                      reply_markup=keyboard)
         await Interview.waiting_for_stat_processing_choice.set()
     elif choice == "start":
-        keyboard = keyboards.kb_service_selection(1)
+        keyboard = keyboards.kb_service_selection()
         await call.message.edit_text("Какую услугу вы хотите получить?",
                                      reply_markup=keyboard)
         await state.finish()
