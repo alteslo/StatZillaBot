@@ -9,6 +9,8 @@ from app.config_reader import load_config
 from app.handlers.stat_data_proc import register_handlers_Analysis
 from app.handlers.common import register_handlers_common
 from app.handlers.return_back import register_handlers_return
+from app.handlers.support import register_handlers_Support
+
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +43,7 @@ async def main():
     register_handlers_common(dp)
     register_handlers_Analysis(dp)
     register_handlers_return(dp)
+    register_handlers_Support(dp)
 
     # Установка команд бота
     await set_commands(bot)

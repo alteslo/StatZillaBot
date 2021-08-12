@@ -25,7 +25,6 @@ async def interview_start(message: types.Message, state: FSMContext):
         f"Приветствую, {user_name}!",
         reply_markup=types.ReplyKeyboardRemove()
     )
-
     keyboard = keyboards.kb_service_selection()
     await message.answer("Какую услугу вы хотите получить?",
                          reply_markup=keyboard)

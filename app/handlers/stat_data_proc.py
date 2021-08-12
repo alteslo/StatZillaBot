@@ -1,5 +1,6 @@
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
+from aiogram.types.reply_keyboard import ReplyKeyboardRemove
 
 from app.states.interview import Interview
 from app import keyboards
@@ -18,6 +19,7 @@ async def stat_processing_choice(call: types.CallbackQuery,
     keyboard = keyboards.kb_stat_processing_choice(user_id)
 
     await state.update_data(chosen_main_service=service_choise)
+    print(callback_data)
 
     if service_choise == "stat_proc":
         await call.message.edit_text("Теперь выберите вид анализа:",
@@ -29,36 +31,22 @@ async def stat_processing_choice(call: types.CallbackQuery,
     await call.answer()
 
 
-async def stat_price_answer(call: types.CallbackQuery,
-                            callback_data: dict,
+async def stat_price_answer(call: types.CallbackQuery, callback_data: dict,
                             state: FSMContext):
-    """
-    Функция вызываемая только из состояния waiting_for_stat_processing_choice
-    """
-    print(callback_data)
-    if "help" in callback_data.values():
-        await call.message.edit_text(text="Вы выбрали помощь зала",
-                                     parse_mode='HTML')
-        user_id = call.user
-        await call.message.answer_contact(phone_number="", first_name="")
-        
-        await Interview.need_help.set()
-        await call.answer()
-    else:
-        choice = callback_data.get(("service"))
-        user_id = call.from_user.id
-        keyboard = keyboards.kb_discount(user_id)
-        option = app_data.stat_datas[choice][0]
-        bill = app_data.stat_datas[choice][1]
+    choice = callback_data.get(("service"))
+    user_id = call.from_user.id
+    keyboard = keyboards.kb_discount(user_id)
+    option = app_data.stat_datas[choice][0]
+    bill = app_data.stat_datas[choice][1]
 
-        await state.update_data(chosen_stat_processing=choice)
-        await call.message.edit_text(
-                                f"Вы выбрали: {option} стоимость составит:\n"
-                                f"<u><b>{bill}</b></u> р.",
-                                parse_mode='HTML',
-                                reply_markup=keyboard)
-        await Interview.price_answer.set()
-        await call.answer()
+    await state.update_data(chosen_stat_processing=choice)
+    await call.message.edit_text(
+                            f"Вы выбрали: {option} стоимость составит:\n"
+                            f"<u><b>{bill}</b></u> р.",
+                            parse_mode='HTML',
+                            reply_markup=keyboard)
+    await Interview.price_answer.set()
+    await call.answer()
 
 
 def register_handlers_Analysis(dp: Dispatcher):
@@ -66,11 +54,6 @@ def register_handlers_Analysis(dp: Dispatcher):
         stat_processing_choice,
         service_callback.filter(main_services="stat_proc"),
         state=Interview.waiting_for_service_selection
-        )
-    dp.register_callback_query_handler(
-            stat_price_answer,
-            help_callback.filter(),
-            state=Interview.waiting_for_stat_processing_choice
         )
     dp.register_callback_query_handler(
         stat_price_answer,
