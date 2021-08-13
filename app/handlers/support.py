@@ -1,28 +1,34 @@
-import keyword
 from aiogram import Dispatcher, types
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.builtin import Text
+from aiogram.dispatcher.storage import FSMContext
 
 from app.states.interview import Interview
 from app import keyboards
-from app.keyboards.callback_datas import help_callback
+from app.keyboards.callback_datas import support_callback
 
 
-async def share_contact(call: types.CallbackQuery):
-    await call.message.delete()
-    await Interview.need_help.set()
+async def get_support_message(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    second_id = data.get("second_id")
+
+    await message(second_id,
+                           f"Вам письмо! Вы можете ответить нажав на кнопку ниже")
+    keyboard = await support_keyboard(messages="one", user_id=message.from_user.id)
+    await message.copy_to(second_id, reply_markup=keyboard)
+
+    await message.answer("Вы отправили это сообщение!")
+    await state.reset_state()
 
 
-async def suppp(message: types.Message):
-    keyboard = keyboards.kb_contact()
-    await message.answer(text="Труляля поддержка делись телефоном",
-                         reply_markup=keyboard)
+async def ask_suport(message: types.Message):
+    text = "Хотите написать сообщение техподдержке? Нажмите на кнопку ниже!"
+    keyboard = await keyboards.kb_support(messages="one")
+    await message.answer(text=text, reply_markup=keyboard)
 
 
 def register_handlers_Support(dp: Dispatcher):
-
+    dp.register_message_handler(ask_suport, commands="support"),
     dp.register_callback_query_handler(
             share_contact,
-            help_callback.filter(),
+            support_callback.filter(messages="one"),
             state=Interview.waiting_for_stat_processing_choice)
-    dp.register_message_handler(suppp, Text(contains=""), state=Interview.need_help)
+    
