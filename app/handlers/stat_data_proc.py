@@ -1,13 +1,11 @@
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
-from aiogram.types.reply_keyboard import ReplyKeyboardRemove
 
 from app.states.interview import Interview
 from app import keyboards
 from app import app_data
 from app.keyboards.callback_datas import service_callback
 from app.keyboards.callback_datas import stat_callback
-from app.keyboards.callback_datas import help_callback
 
 
 async def stat_processing_choice(call: types.CallbackQuery,

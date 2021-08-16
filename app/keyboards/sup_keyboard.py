@@ -1,5 +1,4 @@
 import random
-import re
 
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.types import InlineKeyboardMarkup
@@ -10,11 +9,13 @@ from app.keyboards.callback_datas import cancel_support_callback
 from app.app_data import support_ids
 
 
-async def check_support_available(support_id, storage: MemoryStorage):
+async def check_support_available(support_id, storage=MemoryStorage()):
     state = await storage.get_state(chat=support_id, user=support_id)
+    print(f" Выводим state из клавы и функции check_support_available {state}")
     if state == "in_support":
         return
     else:
+        print(f" Выводим support_id из клавы и функции check_support_available {support_id}")
         return support_id
 
 
@@ -32,6 +33,7 @@ async def kb_support(messages, user_id=None):
     """Клавиатура"""
     if user_id:
         contact_id = int(user_id)
+        print(f"\n\nСюда попадает чтото ? {contact_id}")
         as_user = "no"
         text = "Ответить пользователю"
     else:
@@ -41,29 +43,30 @@ async def kb_support(messages, user_id=None):
             return False
         elif messages == "one" and contact_id is None:
             contact_id = random.choice(support_ids)
+
         if messages == "one":
             text = "Написать одно сообщение в техподдержку"
         else:
             text = "Написать оператору"
-        
-        keyboard = InlineKeyboardMarkup()
-        keyboard.add(
-                InlineKeyboardButton(
-                    text=text,
-                    callback_data=support_callback.new(
-                            messages=messages,
-                            user_id=contact_id,
-                            as_user=as_user
-                    )
-                )
-        )
-        if messages == "many":
-            keyboard.add(
-                InlineKeyboardButton(
-                    text="Завершить сеанс",
-                    callback_data=cancel_support_callback.new(
-                        user_id=contact_id
-                    )
+
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(
+            InlineKeyboardButton(
+                text=text,
+                callback_data=support_callback.new(
+                        messages=messages,
+                        user_id=contact_id,
+                        as_user=as_user
                 )
             )
-        return keyboard
+    )
+    if messages == "many":
+        keyboard.add(
+            InlineKeyboardButton(
+                text="Завершить сеанс",
+                callback_data=cancel_support_callback.new(
+                    user_id=contact_id
+                )
+            )
+        )
+    return keyboard

@@ -8,4 +8,4 @@ class Interview(StatesGroup):
     price_answer = State()
     waiting_for_contact_number = State()
 
-    need_help = State()
+    wait_for_support_message = State()
