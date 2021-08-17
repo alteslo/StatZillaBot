@@ -14,12 +14,12 @@ async def return_to_stat_processing_choice(call: types.CallbackQuery,
     choice = callback_data.get(("deep"))
     user_id = call.from_user.id
     if choice == "stat_choice":
-        keyboard = keyboards.kb_stat_processing_choice(user_id)
+        keyboard = await keyboards.kb_stat_processing_choice(user_id)
         await call.message.edit_text("Выберите вид анализа:",
                                      reply_markup=keyboard)
         await Interview.waiting_for_stat_processing_choice.set()
     elif choice == "start":
-        keyboard = keyboards.kb_service_selection()
+        keyboard = await keyboards.kb_service_selection()
         await call.message.edit_text("Какую услугу вы хотите получить?",
                                      reply_markup=keyboard)
         await state.finish()

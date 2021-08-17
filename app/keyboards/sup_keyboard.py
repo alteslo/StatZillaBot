@@ -3,6 +3,8 @@ import random
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.types import InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup
+from aiogram.types import KeyboardButton
 
 from app.keyboards.callback_datas import support_callback
 from app.keyboards.callback_datas import cancel_support_callback
@@ -69,4 +71,15 @@ async def kb_support(messages, user_id=None):
                 )
             )
         )
+    return keyboard
+
+
+async def kb_share_phone():
+    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+    keyboard.add(
+        KeyboardButton(
+            text="Поделись телефоном",
+            request_contact=True
+        )
+    )
     return keyboard

@@ -14,7 +14,7 @@ async def stat_processing_choice(call: types.CallbackQuery,
     """Функция вызываемая только из состояния waiting_for_service_selection"""
     service_choise = callback_data.get("main_services")
     user_id = call.from_user.id
-    keyboard = keyboards.kb_stat_processing_choice(user_id)
+    keyboard = await keyboards.kb_stat_processing_choice(user_id)
 
     await state.update_data(chosen_main_service=service_choise)
     print(callback_data)
@@ -33,7 +33,7 @@ async def stat_price_answer(call: types.CallbackQuery, callback_data: dict,
                             state: FSMContext):
     choice = callback_data.get(("service"))
     user_id = call.from_user.id
-    keyboard = keyboards.kb_discount(user_id)
+    keyboard = await keyboards.kb_discount(user_id)
     option = app_data.stat_datas[choice][0]
     bill = app_data.stat_datas[choice][1]
 

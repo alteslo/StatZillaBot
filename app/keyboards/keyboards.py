@@ -7,7 +7,7 @@ from app.keyboards.callback_datas import back_callback
 from app.keyboards.callback_datas import help_callback
 
 
-def kb_service_selection(width=1):
+async def kb_service_selection(width=1):
     """Клавиатура для основного выбора услуг"""
     buttons = [
         types.InlineKeyboardButton(text="Статистическая обработка данных",
@@ -25,7 +25,7 @@ def kb_service_selection(width=1):
     return keyboard
 
 
-def kb_stat_processing_choice(user_id, width=1):
+async def kb_stat_processing_choice(user_id, width=1):
     """Клавиатура для выбора услуг статистического анализа"""
     buttons = []
     for key in stat_datas:
@@ -44,7 +44,7 @@ def kb_stat_processing_choice(user_id, width=1):
     return keyboard
 
 
-def kb_discount(user_id, width=1):
+async def kb_discount(user_id, width=1):
     """Клавиатура для выбора услуг статистического анализа"""
     buttons = [
             types.InlineKeyboardButton(text="Хотите скидку?",

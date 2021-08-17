@@ -37,14 +37,14 @@ class Database():
         CREATE TABLE users(
             user_id INT PRIMARY KEY NOT NULL,
             name VARCHAR(150) NOT NULL,
-            email VARCHAR(150));
+            phone VARCHAR(150));
         """
         self.execute(sql, commit=True)
 
-    def add_user(self, user_id: int, name: str, email: str = None):
+    def add_user(self, user_id: int, name: str, phone: str = None):
         """Добавляем нового пользователя"""
-        sql = """INSERT INTO users(user_id, name, email) VALUES (?, ?, ?);"""
-        parameters = (user_id, name, email)
+        sql = """INSERT INTO users(user_id, name, phone) VALUES (?, ?, ?);"""
+        parameters = (user_id, name, phone)
         self.execute(sql, parameters=parameters, commit=True)
 
     def select_all_users(self):
@@ -70,9 +70,9 @@ class Database():
         sql = """SELECT COUNT(*) FROM users"""
         return self.execute(sql, fetchone=True)
 
-    def update_user_email(self, email, user_id):
-        sql = """UPDATE users SET email=? WHERE id=?"""
-        return self.execute(sql, parameters=(email, user_id), commit=True)
+    def update_user_phone(self, phone, user_id):
+        sql = """UPDATE users SET phone=? WHERE user_id=?"""
+        return self.execute(sql, parameters=(phone, user_id), commit=True)
 
     def delete_users(self):
         sql = """DELETE FROM users"""
