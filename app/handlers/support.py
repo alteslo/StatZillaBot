@@ -1,6 +1,6 @@
 from aiogram import Bot, Dispatcher, types
 from aiogram.dispatcher import FSMContext
-from aiogram.types.reply_keyboard import ReplyKeyboardRemove
+from aiogram.dispatcher.filters import Text
 
 from app.config_reader import load_config
 from app.states.interview import Interview
@@ -16,14 +16,11 @@ bot = Bot(token=config.tg_bot.token)
 
 
 async def ask_suport(call: types.CallbackQuery):
-    text = "Хотите написать сообщение техподдержке? Нажмите на кнопку ниже!"
+    text = "Напишите нашему менеджеру - <b>нажав на кнопку!</b>"
     keyboard = await keyboards.kb_support(messages="one")
-    await call.message.answer(text=text, reply_markup=keyboard)
-
-    text = "А еще можете поделиться Вашим телефонным номером нажав кнопку ниже"
-    keyboard = await keyboards.kb_share_phone()
-    await call.message.answer(text=text, reply_markup=keyboard)
-    print(f"Выводим id из ask_support {call.message.from_user.id}")
+    await call.message.edit_text(text=text,
+                                 parse_mode='HTML',
+                                 reply_markup=keyboard)
 
 
 async def send_to_support(call: types.CallbackQuery,
@@ -34,7 +31,7 @@ async def send_to_support(call: types.CallbackQuery,
     await call.answer()
 
     await call.message.answer(
-        "Пришлите ваше сообщение, которым вы хотите поделиться")
+        "Пришлите Ваше сообщение, которым вы хотите поделиться")
     await Interview.wait_for_support_message.set()
     await state.update_data(second_id=user_id)
     data = await state.get_state()
@@ -53,8 +50,6 @@ async def get_support_message(message: types.Message, state: FSMContext):
         second_id,
         "Вам письмо! Вы можете ответить нажав на кнопку ниже")
 
-    print(f"user.id из get_support_message = {message.from_user.id}")
-
     keyboard = await keyboards.kb_support(messages="one",
                                           user_id=message.from_user.id)
     await message.copy_to(second_id, reply_markup=keyboard)
@@ -63,22 +58,35 @@ async def get_support_message(message: types.Message, state: FSMContext):
     await state.reset_state()
 
 
+async def share_phone_number(call: types.CallbackQuery):
+    text = "А еще можете поделиться Вашим телефонным номером"
+    keyboard = await keyboards.kb_share_phone()
+    await call.message.edit_text(text=text)
+    await call.message.answer(text="Нажми кнопку ниже", reply_markup=keyboard)
+    await call.answer()
+
+
 async def get_phone(message: types.Message):
     contact = message.contact
     db.update_user_phone(contact.phone_number, contact.user_id)
+
     await message.copy_to(support_ids[0])
     await message.answer(
         f"Спасибо, {contact.full_name}\n"
-        f"Ваш номер {contact.phone_number} был получен и передан менеджеру. Ожидайте",
-        reply_markup=ReplyKeyboardRemove()
+        f"Ваш номер {contact.phone_number} был получен и передан менеджеру. "
+        f"Ожидайте",
+        reply_markup=types.ReplyKeyboardRemove()
     )
 
 
 def register_handlers_Support(dp: Dispatcher):
     dp.register_callback_query_handler(ask_suport,
                                        help_callback.filter(), state="*")
+    dp.register_callback_query_handler(share_phone_number, Text(
+        equals="share_phone"), state="*")
     dp.register_message_handler(get_phone,
-                                content_types=types.ContentType.CONTACT, state="*")
+                                content_types=types.ContentType.CONTACT,
+                                state="*")
     dp.register_callback_query_handler(
             send_to_support,
             support_callback.filter(messages="one"), state="*")

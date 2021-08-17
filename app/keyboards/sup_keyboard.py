@@ -8,16 +8,16 @@ from aiogram.types import KeyboardButton
 
 from app.keyboards.callback_datas import support_callback
 from app.keyboards.callback_datas import cancel_support_callback
+from app.keyboards.callback_datas import back_callback
 from app.app_data import support_ids
 
 
 async def check_support_available(support_id, storage=MemoryStorage()):
     state = await storage.get_state(chat=support_id, user=support_id)
-    print(f" Выводим state из клавы и функции check_support_available {state}")
+
     if state == "in_support":
         return
     else:
-        print(f" Выводим support_id из клавы и функции check_support_available {support_id}")
         return support_id
 
 
@@ -35,9 +35,18 @@ async def kb_support(messages, user_id=None):
     """Клавиатура"""
     if user_id:
         contact_id = int(user_id)
-        print(f"\n\nСюда попадает чтото ? {contact_id}")
         as_user = "no"
         text = "Ответить пользователю"
+        buttons = [
+            InlineKeyboardButton(
+                    text=text,
+                    callback_data=support_callback.new(
+                            messages=messages,
+                            user_id=contact_id,
+                            as_user=as_user
+                    )
+                )
+        ]
     else:
         contact_id = await get_support_manager()
         as_user = "yes"
@@ -47,21 +56,33 @@ async def kb_support(messages, user_id=None):
             contact_id = random.choice(support_ids)
 
         if messages == "one":
-            text = "Написать одно сообщение в техподдержку"
+            text = "Написать одно сообщение менеджеру"
+            buttons = [
+                InlineKeyboardButton(
+                        text=text,
+                        callback_data=support_callback.new(
+                                messages=messages,
+                                user_id=contact_id,
+                                as_user=as_user
+                        )
+                    ),
+                InlineKeyboardButton(
+                    text="Хочу чтобы мне позвонил менеджер",
+                    callback_data="share_phone"),
+                InlineKeyboardButton(
+                        text="Вернуться в начало",
+                        callback_data=back_callback.new(
+                                deep="start",
+
+                        )
+                    )
+            ]
         else:
             text = "Написать оператору"
 
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(
-            InlineKeyboardButton(
-                text=text,
-                callback_data=support_callback.new(
-                        messages=messages,
-                        user_id=contact_id,
-                        as_user=as_user
-                )
-            )
-    )
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(*buttons)
+
     if messages == "many":
         keyboard.add(
             InlineKeyboardButton(
@@ -78,7 +99,7 @@ async def kb_share_phone():
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add(
         KeyboardButton(
-            text="Поделись телефоном",
+            text="Поделись телефоном \U0001F919",
             request_contact=True
         )
     )

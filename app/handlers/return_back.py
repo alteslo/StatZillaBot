@@ -10,7 +10,7 @@ async def return_to_stat_processing_choice(call: types.CallbackQuery,
                                            callback_data: dict,
                                            state: FSMContext):
     await state.update_data(chosen_stat_processing="")
-
+    await call.answer()
     choice = callback_data.get(("deep"))
     user_id = call.from_user.id
     if choice == "stat_choice":
@@ -31,5 +31,5 @@ def register_handlers_return(dp: Dispatcher):
     dp.register_callback_query_handler(
             return_to_stat_processing_choice,
             back_callback.filter(),
-            state=Interview.price_answer
+            state="*"
             )

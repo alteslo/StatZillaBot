@@ -37,6 +37,7 @@ async def stat_price_answer(call: types.CallbackQuery, callback_data: dict,
     option = app_data.stat_datas[choice][0]
     bill = app_data.stat_datas[choice][1]
 
+    await call.answer()
     await state.update_data(chosen_stat_processing=choice)
     await call.message.edit_text(
                             f"Вы выбрали: {option} стоимость составит:\n"
@@ -44,7 +45,6 @@ async def stat_price_answer(call: types.CallbackQuery, callback_data: dict,
                             parse_mode='HTML',
                             reply_markup=keyboard)
     await Interview.price_answer.set()
-    await call.answer()
 
 
 def register_handlers_Analysis(dp: Dispatcher):
