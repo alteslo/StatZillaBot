@@ -9,7 +9,7 @@ from aiogram.types import KeyboardButton
 from app.keyboards.callback_datas import support_callback
 from app.keyboards.callback_datas import cancel_support_callback
 from app.keyboards.callback_datas import back_callback
-from app.app_data import support_ids
+from app.data.app_data import support_ids
 
 
 async def check_support_available(support_id, storage=MemoryStorage()):

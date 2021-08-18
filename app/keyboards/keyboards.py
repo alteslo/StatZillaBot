@@ -1,6 +1,6 @@
 from aiogram import types
 
-from app.app_data import stat_datas
+from app.data.app_data import stat_datas
 from app.keyboards.callback_datas import service_callback
 from app.keyboards.callback_datas import stat_callback
 from app.keyboards.callback_datas import back_callback

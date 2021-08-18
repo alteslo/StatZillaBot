@@ -3,7 +3,7 @@ from aiogram.dispatcher import FSMContext
 
 from app.states.interview import Interview
 from app import keyboards
-from app import app_data
+from app.data import app_data
 from app.keyboards.callback_datas import service_callback
 from app.keyboards.callback_datas import stat_callback
 
@@ -20,12 +20,13 @@ async def stat_processing_choice(call: types.CallbackQuery,
     print(callback_data)
 
     if service_choise == "stat_proc":
-        await call.message.edit_text("Теперь выберите вид анализа:",
+        await call.message.edit_text(text="Теперь выберите вид анализа:",
                                      reply_markup=keyboard)
         await Interview.waiting_for_stat_processing_choice.set()
     else:
-        await call.message.answer("пока не написал код")
+        await call.message.answer(text="пока не написал код")
         await state.finish()
+
     await call.answer()
 
 
@@ -37,14 +38,14 @@ async def stat_price_answer(call: types.CallbackQuery, callback_data: dict,
     option = app_data.stat_datas[choice][0]
     bill = app_data.stat_datas[choice][1]
 
-    await call.answer()
     await state.update_data(chosen_stat_processing=choice)
     await call.message.edit_text(
-                            f"Вы выбрали: {option} стоимость составит:\n"
-                            f"<u><b>{bill}</b></u> р.",
+                            text=f"Вы выбрали: {option} стоимость составит:\n"
+                                 f"<u><b>{bill}</b></u> р.",
                             parse_mode='HTML',
                             reply_markup=keyboard)
     await Interview.price_answer.set()
+    await call.answer()
 
 
 def register_handlers_Analysis(dp: Dispatcher):
