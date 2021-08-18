@@ -9,3 +9,4 @@ class Interview(StatesGroup):
     waiting_for_contact_number = State()
 
     wait_for_support_message = State()
+    wait_in_support = State()

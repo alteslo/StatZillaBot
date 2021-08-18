@@ -1,14 +1,12 @@
 from aiogram import Bot, Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.dispatcher.filters import Text
-from aiogram.types import user
 
 from app.config_reader import load_config
 from app.states.interview import Interview
 from app import keyboards
 from app.keyboards.callback_datas import support_callback
-from app.keyboards.callback_datas import help_callback
+from app.keyboards.callback_datas import cancel_support_callback
 from app.utils.db_api.sqlite import db
 from app.app_data import support_ids
 
@@ -29,10 +27,12 @@ async def ask_suport_call(message: types.Message):
 async def send_to_support_call(call: types.CallbackQuery,
                                state: FSMContext,
                                callback_data: dict):
-    await call.message.edit("Вы обратились в техподдержку. Ждем ответа от оператора!")
+    await call.message.edit_text("Вы обратились в техподдержку. Ждем ответа от оператора!")
     user_id = int(callback_data.get("user_id"))
+    print(f"Это id менеджера {user_id=}")
+
     if not await keyboards.check_support_available(user_id):
-        support_id = await get_support_manager()
+        support_id = await keyboards.get_support_manager()
     else:
         support_id = user_id
 
@@ -41,8 +41,20 @@ async def send_to_support_call(call: types.CallbackQuery,
         await state.reset_state()
         return
 
-    await state.set_state("wait_in_support")
+    await Interview.wait_in_support.set()
+
+    print(f"Это кому присваивается state {state.user}")
+    print(f"А это его state {await state.get_state()}")
+
     await state.update_data(second_id=support_id)
+    user_id = call.from_user.id
+
+    print(f"{user_id=}")
+
+    storage = MemoryStorage()
+    user_state = await storage.get_state(chat=user_id, user=user_id)
+
+    print(f"{user_state=}")
 
     keyboard = await keyboards.kb_support(messages="many", user_id=call.from_user.id)
     await bot.send_message(support_id,
@@ -51,16 +63,20 @@ async def send_to_support_call(call: types.CallbackQuery,
                            )
 
 
-async def answer_support_call(call: types.CallbackQuery, state: FSMContext, callback_data: dict, storage=MemoryStorage()):
-    second_id = int(callback_data.get("user_id"))
+async def answer_support_call(call: types.CallbackQuery,
+                              state: FSMContext,
+                              callback_data: dict,
+                              storage=MemoryStorage()):
+    second_id = callback_data.get("user_id")
+    print(f"{second_id=}")
     user_state = await storage.get_state(chat=second_id, user=second_id)
-
-    if str(user_state) != "wait_in_support":
+    print(user_state)
+    if user_state != "wait_in_support":
         await call.message.edit_text("К сожалению, пользователь уже передумал.")
         return
 
     await state.set_state("in_support")
-    await user_state.set_state("in_support")
+    await storage.set_state(chat=second_id, user=second_id, state="in_support")
 
     await state.update_data(second_id=second_id)
 
@@ -90,7 +106,7 @@ async def exit_support(call: types.CallbackQuery, state: FSMContext, callback_da
     user_id = int(callback_data.get("user_id"))
     second_state = await storage.get_state(user=user_id, chat=user_id)
 
-    if await second_state is not None:
+    if second_state is not None:
         data_second = await second_state.get_data()
         second_id = data_second.get("second_id")
         if int(second_id) == call.from_user.id:
@@ -99,7 +115,6 @@ async def exit_support(call: types.CallbackQuery, state: FSMContext, callback_da
 
     await call.message.edit_text("Вы завершили сеанс")
     await state.reset_state()
-
 
 
 async def share_phone_number(call: types.CallbackQuery):
@@ -123,18 +138,19 @@ async def get_phone(message: types.Message):
     )
 
 
-def register_handlers_Support(dp: Dispatcher):
+def register_handlers_call_Support(dp: Dispatcher):
     dp.register_message_handler(ask_suport_call,
                                 commands="support", state="*")
-    dp.register_callback_query_handler(share_phone_number, Text(
-        equals="share_phone"), state="*")
-    dp.register_message_handler(get_phone,
-                                content_types=types.ContentType.CONTACT,
-                                state="*")
     dp.register_callback_query_handler(
             send_to_support_call,
-            support_callback.filter(messages="many", as_user="yes"), state="*")
+            support_callback.filter(messages="many", as_user="yes"))
+    dp.register_message_handler(not_supported,
+                                state="wait_in_support",
+                                content_types=types.ContentTypes.ANY)
+    dp.register_callback_query_handler(
+                            exit_support,
+                            cancel_support_callback.filter(),
+                            state=["in_support", "wait_in_support", None])
     dp.register_callback_query_handler(answer_support_call,
                                        support_callback.filter(messages="many",
-                                                               as_user="no"),
-                                       state="*"
+                                                               as_user="no"), state="*")

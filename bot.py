@@ -6,10 +6,12 @@ from aiogram.types import BotCommand
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 from app.config_reader import load_config
+from app.middlewares.support_middleware import register_middlewares
 from app.handlers.stat_data_proc import register_handlers_Analysis
 from app.handlers.common import register_handlers_common
 from app.handlers.return_back import register_handlers_return
 from app.handlers.support import register_handlers_Support
+from app.handlers.support_call import register_handlers_call_Support
 
 
 logger = logging.getLogger(__name__)
@@ -41,9 +43,11 @@ async def main():
     dp = Dispatcher(bot, storage=MemoryStorage())
 
     # Регистрация хэндлеров
+    register_middlewares(dp)
     register_handlers_common(dp)
     register_handlers_Analysis(dp)
     register_handlers_return(dp)
+    register_handlers_call_Support(dp)
     register_handlers_Support(dp)
 
     # Установка команд бота

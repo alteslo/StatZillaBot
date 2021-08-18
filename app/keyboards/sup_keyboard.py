@@ -79,6 +79,15 @@ async def kb_support(messages, user_id=None):
             ]
         else:
             text = "Написать оператору"
+            buttons = [
+                InlineKeyboardButton(
+                        text=text,
+                        callback_data=support_callback.new(
+                                messages=messages,
+                                user_id=contact_id,
+                                as_user=as_user
+                        )
+                    )]
 
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(*buttons)
