@@ -95,6 +95,21 @@ async def kb_support(messages, user_id=None):
     return keyboard
 
 
+def cancel_support(user_id):
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Завершить сеанс",
+                    callback_data=cancel_support_callback.new(
+                        user_id=user_id
+                    )
+                )
+            ]
+        ]
+    )
+
+
 async def kb_share_phone():
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add(
