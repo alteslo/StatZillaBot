@@ -21,6 +21,7 @@ async def check_support_available(support_id, storage=MemoryStorage()):
         return support_id
 
 
+
 async def get_support_manager():
     random.shuffle(support_ids)
     for support_id in support_ids:

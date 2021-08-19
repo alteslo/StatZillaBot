@@ -1,8 +1,7 @@
-from aiogram import Bot, Dispatcher, types
+from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
-from app.config_reader import load_config
 from app.states.interview import Interview
 from app import keyboards
 from app.keyboards.callback_datas import support_callback
@@ -11,13 +10,10 @@ from app.utils.db_api.sqlite import db
 from app.app_data import support_ids
 
 
-config = load_config("config/bot.ini")
-bot = Bot(token=config.tg_bot.token)
-
-
 async def ask_suport_call(message: types.Message):
     text = "Хотите связаться с техподдержкой? Нажмите на кнопку ниже!"
     keyboard = await keyboards.kb_support(messages="many")
+
     if not keyboard:
         await message.answer("К сожалению, сейчас нет свободных операторов. Попробуйте позже.")
         return
@@ -29,6 +25,7 @@ async def send_to_support_call(call: types.CallbackQuery,
                                callback_data: dict):
     await call.message.edit_text("Вы обратились в техподдержку. Ждем ответа от оператора!")
     user_id = int(callback_data.get("user_id"))
+
     print(f"Это id менеджера {user_id=}")
 
     if not await keyboards.check_support_available(user_id):
@@ -49,15 +46,8 @@ async def send_to_support_call(call: types.CallbackQuery,
     await state.update_data(second_id=support_id)
     user_id = call.from_user.id
 
-    print(f"{user_id=}")
-
-    storage = MemoryStorage()
-    user_state = await storage.get_state(chat=user_id, user=user_id)
-
-    print(f"{user_state=}")
-
     keyboard = await keyboards.kb_support(messages="many", user_id=call.from_user.id)
-    await bot.send_message(support_id,
+    await call.bot.send_message(support_id,
                            f"С вами хочет связаться пользователь {call.from_user.full_name}",
                            reply_markup=keyboard
                            )
@@ -65,13 +55,18 @@ async def send_to_support_call(call: types.CallbackQuery,
 
 async def answer_support_call(call: types.CallbackQuery,
                               state: FSMContext,
-                              callback_data: dict,
-                              storage=MemoryStorage()):
+                              dp: Dispatcher,
+                              callback_data: dict):
     second_id = callback_data.get("user_id")
+
     print(f"{second_id=}")
-    user_state = await storage.get_state(chat=second_id, user=second_id)
-    print(user_state)
-    if user_state != "wait_in_support":
+
+    user_state = dp.current_state(chat=second_id, user=second_id)
+    user_state_a = await user_state.get_state()
+
+    print(user_state_a)
+
+    if user_state_a != "wait_in_support":
         await call.message.edit_text("К сожалению, пользователь уже передумал.")
         return
 
@@ -87,7 +82,7 @@ async def answer_support_call(call: types.CallbackQuery,
                                  "Чтобы завершить общение нажмите на кнопку.",
                                  reply_markup=keyboard
                                  )
-    await bot.send_message(second_id,
+    await call.bot.send_message(second_id,
                            "Техподдержка на связи! Можете писать сюда свое сообщение. \n"
                            "Чтобы завершить общение нажмите на кнопку.",
                            reply_markup=keyboard_second_user
@@ -111,7 +106,7 @@ async def exit_support(call: types.CallbackQuery, state: FSMContext, callback_da
         second_id = data_second.get("second_id")
         if int(second_id) == call.from_user.id:
             await second_state.reset_state()
-            await bot.send_message(user_id, "Пользователь завершил сеанс техподдержки")
+            await call.bot.send_message(user_id, "Пользователь завершил сеанс техподдержки")
 
     await call.message.edit_text("Вы завершили сеанс")
     await state.reset_state()
