@@ -10,7 +10,6 @@ from app.middlewares.support_middleware import register_middlewares
 from app.handlers.stat_data_proc import register_handlers_Analysis
 from app.handlers.common import register_handlers_common
 from app.handlers.return_back import register_handlers_return
-from app.handlers.support import register_handlers_Support
 from app.handlers.support_call import register_handlers_call_Support
 
 
@@ -48,7 +47,6 @@ async def main():
     register_handlers_Analysis(dp)
     register_handlers_return(dp)
     register_handlers_call_Support(dp)
-    register_handlers_Support(dp)
 
     # Установка команд бота
     await set_commands(bot)

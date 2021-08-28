@@ -2,27 +2,28 @@ from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
-from app.states.interview import Interview
 from app import keyboards
 from app.keyboards.callback_datas import support_callback
 from app.keyboards.callback_datas import cancel_support_callback
+from app.keyboards.callback_datas import help_callback
 from app.utils.db_api.sqlite import db
 from app.app_data import support_ids
 
 
-async def ask_suport_call(message: types.Message):
+async def ask_suport_call(call: types.CallbackQuery):
     text = "Хотите связаться с техподдержкой? Нажмите на кнопку ниже!"
     keyboard = await keyboards.kb_support(messages="many")
 
     if not keyboard:
-        await message.answer("К сожалению, сейчас нет свободных операторов. Попробуйте позже.")
+        await call.message.edit_text("К сожалению, сейчас нет свободных операторов. Попробуйте позже.")
         return
-    await message.answer(text, reply_markup=keyboard)
+    await call.message.edit_text(text, reply_markup=keyboard)
 
 
 async def send_to_support_call(call: types.CallbackQuery,
                                state: FSMContext,
                                callback_data: dict):
+    print("Мы попали в хэндлер")
     await call.message.edit_text("Вы обратились в техподдержку. Ждем ответа от оператора!")
     user_id = int(callback_data.get("user_id"))
 
@@ -38,7 +39,7 @@ async def send_to_support_call(call: types.CallbackQuery,
         await state.reset_state()
         return
 
-    await Interview.wait_in_support.set()
+    await state.set_state("wait_in_support")
 
     print(f"Это кому присваивается state {state.user}")
     print(f"А это его state {await state.get_state()}")
@@ -55,23 +56,20 @@ async def send_to_support_call(call: types.CallbackQuery,
 
 async def answer_support_call(call: types.CallbackQuery,
                               state: FSMContext,
-                              dp: Dispatcher,
                               callback_data: dict):
     second_id = callback_data.get("user_id")
 
     print(f"{second_id=}")
 
+    dp = Dispatcher.get_current()
     user_state = dp.current_state(chat=second_id, user=second_id)
-    user_state_a = await user_state.get_state()
 
-    print(user_state_a)
-
-    if user_state_a != "wait_in_support":
+    if str(await user_state.get_state()) != "wait_in_support":
         await call.message.edit_text("К сожалению, пользователь уже передумал.")
         return
 
     await state.set_state("in_support")
-    await storage.set_state(chat=second_id, user=second_id, state="in_support")
+    await user_state.set_state("in_support")
 
     await state.update_data(second_id=second_id)
 
@@ -99,9 +97,10 @@ async def not_supported(message: types.Message, state: FSMContext):
 
 async def exit_support(call: types.CallbackQuery, state: FSMContext, callback_data: dict, storage=MemoryStorage()):
     user_id = int(callback_data.get("user_id"))
-    second_state = await storage.get_state(user=user_id, chat=user_id)
+    dp = Dispatcher.get_current()
+    second_state = dp.current_state(chat=user_id, user=user_id)
 
-    if second_state is not None:
+    if await second_state.get_state() is not None:
         data_second = await second_state.get_data()
         second_id = data_second.get("second_id")
         if int(second_id) == call.from_user.id:
@@ -134,11 +133,11 @@ async def get_phone(message: types.Message):
 
 
 def register_handlers_call_Support(dp: Dispatcher):
-    dp.register_message_handler(ask_suport_call,
-                                commands="support", state="*")
+    dp.register_callback_query_handler(ask_suport_call,
+                                       help_callback.filter(), state="*")
     dp.register_callback_query_handler(
             send_to_support_call,
-            support_callback.filter(messages="many", as_user="yes"))
+            support_callback.filter(messages="many", as_user="yes"), state="*")
     dp.register_message_handler(not_supported,
                                 state="wait_in_support",
                                 content_types=types.ContentTypes.ANY)
