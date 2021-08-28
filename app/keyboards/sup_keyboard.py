@@ -80,7 +80,7 @@ async def kb_support(messages, user_id=None):
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(*buttons)
 
-    if messages == "many":
+    """if messages == "many":
         keyboard.add(
             InlineKeyboardButton(
                 text="Завершить сеанс",
@@ -88,7 +88,7 @@ async def kb_support(messages, user_id=None):
                     user_id=contact_id
                 )
             )
-        )
+        )"""
     return keyboard
 
 

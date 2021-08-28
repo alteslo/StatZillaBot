@@ -59,8 +59,6 @@ async def answer_support_call(call: types.CallbackQuery,
                               callback_data: dict):
     second_id = callback_data.get("user_id")
 
-    print(f"{second_id=}")
-
     dp = Dispatcher.get_current()
     user_state = dp.current_state(chat=second_id, user=second_id)
 
@@ -95,7 +93,7 @@ async def not_supported(message: types.Message, state: FSMContext):
     await message.answer("Дождитесь ответа оператора или отмените сеанс", reply_markup=keyboard)
 
 
-async def exit_support(call: types.CallbackQuery, state: FSMContext, callback_data: dict, storage=MemoryStorage()):
+async def exit_support(call: types.CallbackQuery, state: FSMContext, callback_data: dict):
     user_id = int(callback_data.get("user_id"))
     dp = Dispatcher.get_current()
     second_state = dp.current_state(chat=user_id, user=user_id)
